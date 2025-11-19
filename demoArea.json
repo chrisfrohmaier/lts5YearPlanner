@@ -4,18 +4,20 @@
     "author": "Your Name",  
     "year1Areas": [ 
 {
-    "name": "testArea1",
-    "type": "box",
-    "RA": [0.0 ,52.5, 52.5, 0.0],
-    "Dec":[-35.0 ,-35.0,-25.0,-25.0],
-    "t_frac": 0.2
+    "name": "Demo Stripe",
+    "type": "stripe",
+    "RA_lower": 180.0,
+    "RA_upper": 230.5,
+    "Dec_lower":-53.0,
+    "Dec_upper":-48.0,
+    "t_frac": 0.6
   },
   {
-    "name": "box2",
-    "type": "box",
-    "RA": [240.0 ,228, 238, 228],
-    "Dec":[-55.0 ,-35.0,-28.0,-41.0],
-    "t_frac": 0.2
+    "name": "single_point",
+    "type": "point",
+    "RA_center":53.12500,
+    "Dec_center":-28.10000,
+    "t_frac": 0.40
   }
 
 ]

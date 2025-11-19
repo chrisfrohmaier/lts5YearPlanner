@@ -1,9 +1,8 @@
-Flask>=2.2,<3
-streamlit>=1.24,<2
-plotly>=5.13
-matplotlib>=3.6
-numpy>=1.24
-shapely>=1.8
-pymongo>=4.0    # MongoDB support
-gunicorn>=20.1  # optional: for production WSGI server
-python-dotenv>=1.2.1
+# No changes required — current requirements already cover exampleApp.py:
+# - streamlit
+# - plotly
+# - numpy
+# - matplotlib
+# - shapely
+# - pymongo
+# Other entries (Flask, gunicorn) are optional and may be kept or removed per deployment needs.
