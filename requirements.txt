@@ -4,3 +4,4 @@ matplotlib>=3.6
 numpy>=1.24
 shapely>=1.8
 pymongo>=4.0    # MongoDB support
+streamlit-code-editor
