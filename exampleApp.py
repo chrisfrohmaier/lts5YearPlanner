@@ -271,6 +271,12 @@ latest_submissions = {}
 if mongo_uri:
     latest_submissions = get_latest_submissions_by_survey(mongo_uri, mongo_db, mongo_coll)
 
+# convert latest_submissions to a JSON string for download/display (ObjectId/datetime -> str)
+try:
+    latest_submissions_json = json.dumps(latest_submissions, indent=4, default=str)
+except Exception:
+    print("Error converting latest submissions to JSON")
+    latest_submissions_json = "{}"
 
 #print(latest_submissions)
 # show a compact summary in the sidebar
@@ -592,6 +598,70 @@ if st.button("Save to remote DB", key="save_remote_db", disabled=save_disabled):
     else:
         st.error(msg)
 
+st.divider()
+st.header("Latest submissions")
+if not latest_submissions:
+    st.info("No submissions found in the remote DB.")
+else:
+    rows = []
+    for s in sorted(latest_submissions.keys()):
+        ent = latest_submissions[s]
+        data_field = ent.get("data", {}) or {}
+        justification = data_field.get("scienceJustification", "")
+        n_areas = len(data_field.get("year1Areas", [])) if isinstance(data_field, dict) else ""
+        rows.append({
+            "survey": s,
+            "timestamp": ent.get("timestamp"),
+            "filename": ent.get("filename"),
+            "n_areas": n_areas,
+            "justification_preview": (justification[:120] + "…") if justification and len(justification) > 120 else justification
+        })
+
+    # provide expanders to inspect full stored document per submission
+    for r in rows:
+        with st.expander(f"{r['survey']} — {r.get('timestamp','')}", expanded=False):
+            doc = latest_submissions.get(r['survey'])
+            st.json(doc)
+
+    allSubmissions = 'LTSYear1_all_surveys'+'_'+str(today.year)+today.strftime('%m')+today.strftime('%d')+'.json'
+    
+    # make this specific download button appear green like the Save button
+    st.markdown(
+        """
+        <style>
+        .green-download-btn .stButton>button[disabled] {
+            background-color: #6c757d !important; /* grey */
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            opacity: 0.6 !important;
+            border: none !important;
+        }
+        .green-download-btn .stButton>button:not([disabled]) {
+            background-color: #28a745 !important; /* green */
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            font-size: 1.05rem !important;
+            padding: 0.7rem 1.2rem !important;
+            border-radius: 8px !important;
+            box-shadow: 0 6px 18px rgba(40,167,69,0.25) !important;
+            border: none !important;
+        }
+        .green-download-btn .stButton>button:not([disabled]):hover {
+            background-color: #218838 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown('<div class="green-download-btn">', unsafe_allow_html=True)
+    st.download_button(
+        label="Download all survey submissions",
+        data=latest_submissions_json,
+        file_name=allSubmissions,
+        mime="application/json",
+        key="download_all_submissions",
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 st.divider()
 st.header("Example JSON inputs")
 st.markdown("""Here are three example polygons you can copy, paste, and edit!
