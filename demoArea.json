@@ -8,16 +8,16 @@
     "type": "stripe",
     "RA_lower": 180.0,
     "RA_upper": 230.5,
-    "Dec_lower":-53.0,
-    "Dec_upper":-48.0,
-    "t_frac": 0.6
+    "Dec_lower":20.0,
+    "Dec_upper":22.0,
+    "t_frac": 0.0
   },
   {
     "name": "single_point",
     "type": "point",
-    "RA_center":53.12500,
-    "Dec_center":-28.10000,
-    "t_frac": 0.40
+    "RA_center":53.0,
+    "Dec_center":10.0000,
+    "t_frac": 0.0
   }
 
 ]
