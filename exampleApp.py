@@ -449,7 +449,7 @@ if plotSmooth:
         x=longitude,
         y=smoothTime,
         mode="lines",
-        name="30 degree Smoothing",
+        name="30° Smooth",
         line=dict(color="#96cefd", width=5)
     ))
     fig_times.add_hline(y=0.5, line_width=2, line_dash="dash", line_color="#72e06a", annotation_text="50% Time Pressure", annotation_position="bottom left")
