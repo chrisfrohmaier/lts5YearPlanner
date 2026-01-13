@@ -1,0 +1,319 @@
+{
+  "_id": {
+    "$oid": "6929c13df58fc1902bcb3001"
+  },
+  "filename": "S04_LTSYear1_20251128.json",
+  "timestamp": "2025-11-28T15:35:25.357609+00:00",
+  "data": {
+    "survey": "S4",
+    "scienceJustification": "year1Areas to enable diverse range of S4 science (disc, bulge, ages and seismology, planet hosts), and its core sub-surveys that provide the data basis for subsequent 4 year operations",
+    "author": "Maria Bergemann",
+    "year1Areas": [
+      {
+        "name": "plato_right",
+        "type": "stripe",
+        "RA_lower": 55,
+        "RA_upper": 120,
+        "Dec_lower": -74,
+        "Dec_upper": -27,
+        "t_frac": 0.4
+      },
+      {
+        "name": "plato_left",
+        "type": "stripe",
+        "RA_lower": 120,
+        "RA_upper": 140,
+        "Dec_lower": -70,
+        "Dec_upper": -44,
+        "t_frac": 0.4
+      },
+      {
+        "name": "k2_1",
+        "type": "stripe",
+        "RA_lower": 330,
+        "RA_upper": 345,
+        "Dec_lower": -18,
+        "Dec_upper": -5,
+        "t_frac": 0.8
+      },
+      {
+        "name": "k2_2",
+        "type": "stripe",
+        "RA_lower": 227,
+        "RA_upper": 241,
+        "Dec_lower": -25,
+        "Dec_upper": -13,
+        "t_frac": 0.4
+      },
+      {
+        "name": "k2_3",
+        "type": "stripe",
+        "RA_lower": 197,
+        "RA_upper": 214,
+        "Dec_lower": -20,
+        "Dec_upper": -5,
+        "t_frac": 0.4
+      },
+      {
+        "name": "k2_4",
+        "type": "stripe",
+        "RA_lower": 164,
+        "RA_upper": 195,
+        "Dec_lower": -9,
+        "Dec_upper": 6,
+        "t_frac": 0
+      },
+      {
+        "name": "deep bulge",
+        "type": "stripe",
+        "RA_lower": 260,
+        "RA_upper": 280,
+        "Dec_lower": -43,
+        "Dec_upper": -25,
+        "t_frac": 0.8
+      }
+    ]
+  }
+}
+
+{
+  "_id": {
+    "$oid": "6929351af58fc1902bcb2f67"
+  },
+  "filename": "S18_LTSYear1_20251128.json",
+  "timestamp": "2025-11-28T05:37:30.649988+00:00",
+  "data": {
+    "survey": "S18",
+    "scienceJustification": "Priority areas for FP calibration and first group/environment science",
+    "author": "E N Taylor <entaylor@swin.edu.au>",
+    "year1Areas": [
+      {
+        "name": "Shapley Supercluster",
+        "type": "stripe",
+        "RA_lower": 189.7,
+        "RA_upper": 212.8,
+        "Dec_lower": -20,
+        "Dec_upper": -40,
+        "t_frac": 0.6
+      },
+      {
+        "name": "SPT Deep Field",
+        "type": "stripe",
+        "RA_lower": 345,
+        "RA_upper": 360,
+        "Dec_lower": -60,
+        "Dec_upper": -50,
+        "t_frac": 1
+      },
+      {
+        "name": "Vela supercluster",
+        "type": "stripe",
+        "RA_lower": 125.5,
+        "RA_upper": 155.5,
+        "Dec_lower": -60,
+        "Dec_upper": -40,
+        "t_frac": 0
+      },
+      {
+        "name": "CMB Dipole",
+        "type": "stripe",
+        "RA_lower": 157.5,
+        "RA_upper": 168.5,
+        "Dec_lower": -31,
+        "Dec_upper": -21,
+        "t_frac": 1
+      }
+    ]
+  }
+}
+
+{
+  "_id": {
+    "$oid": "69289011f58fc1902bcb2ed2"
+  },
+  "filename": "S15_LTSYear1_20251127.json",
+  "timestamp": "2025-11-27T17:53:21.979456+00:00",
+  "data": {
+    "survey": "S15",
+    "scienceJustification": "To be able to carry out scientific analyses related to the cluster environments after Year 1, we require that some of the clusters from the full CHANCES sample have been observed to high completeness, allowing us to fully define the environment and cluster members, leading to multiple Early Science papers. In contrast, having 1/5 of our targets observed in each of our clusters after Year 1 would highly limit our ability to write Early Science papers. We have defined single pointings centred on 10 clusters from the S1502 CHANCES Evolution sub-survey, since all S1502 targets around these clusters lie within a single 4MOST field-of-view. For S1501, we define Declination stripes covering the entire Shapley supercluster, a narrow Declination stripe through the Horologium cluster, and three rectangular regions containnig high-priority clusters. Within this we would like to complete observations of the clusters targetted within SPV.",
+    "author": "Christopher Haines",
+    "year1Areas": [
+      {
+        "name": "S1501: Shapley supercluster",
+        "type": "stripe",
+        "RA_lower": 191,
+        "RA_upper": 212,
+        "Dec_lower": -36,
+        "Dec_upper": -26,
+        "t_frac": 0.8
+      },
+      {
+        "name": "S1501: Horologium supercluster stripe",
+        "type": "stripe",
+        "RA_lower": 47,
+        "RA_upper": 66,
+        "Dec_lower": -55.5,
+        "Dec_upper": -52,
+        "t_frac": 0.9
+      },
+      {
+        "name": "S1501: Abell 754/780 stripe",
+        "type": "stripe",
+        "RA_lower": 134.3,
+        "RA_upper": 141.8,
+        "Dec_lower": -14.3,
+        "Dec_upper": -6.9,
+        "t_frac": 0.9
+      },
+      {
+        "name": "S1501/02: A3376 + PSZ2_G241 + PSZ2_G244 stripe",
+        "type": "stripe",
+        "RA_lower": 81.3,
+        "RA_upper": 93.3,
+        "Dec_lower": -42.3,
+        "Dec_upper": -34.2,
+        "t_frac": 0.9
+      },
+      {
+        "name": "S1501/02: Abell 3391/5 + Bullet + A3404 stripe",
+        "type": "stripe",
+        "RA_lower": 92,
+        "RA_upper": 106,
+        "Dec_lower": -57,
+        "Dec_upper": -52,
+        "t_frac": 0.9
+      },
+      {
+        "name": "S1502: SMACS J0723.3-7327",
+        "type": "point",
+        "RA_center": 110.839,
+        "Dec_center": -73.439,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: PSZ2 G262.73-40.92",
+        "type": "point",
+        "RA_center": 69.579,
+        "Dec_center": -54.318,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: PSZ2 G262.27-35.28",
+        "type": "point",
+        "RA_center": 79.153,
+        "Dec_center": -54.52,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: PSZ2 G277.76-51.74",
+        "type": "point",
+        "RA_center": 43.596,
+        "Dec_center": -58.964,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: PSZ2 G271.18-30.95",
+        "type": "point",
+        "RA_center": 87.326,
+        "Dec_center": -62.083,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: Abell 3186",
+        "type": "point",
+        "RA_center": 58.061,
+        "Dec_center": -74.008,
+        "t_frac": 0.95
+      },
+      {
+        "name": "S1502: Abell 3192",
+        "type": "point",
+        "RA_center": 342.456,
+        "Dec_center": -64.415,
+        "t_frac": 0.95
+      }
+    ]
+  }
+}
+
+{
+  "_id": {
+    "$oid": "691f3754f58fc1902bcb2697"
+  },
+  "filename": "S09_LTSYear1_20251120.json",
+  "timestamp": "2025-11-20T15:44:20.222170+00:00",
+  "data": {
+    "survey": "S09",
+    "scienceJustification": "We need a long (5yr) time baseline for cadence targets in the deep fields in the center of the LMC and SMC.",
+    "author": "Jesper Storm",
+    "year1Areas": [
+      {
+        "name": "LMC_center",
+        "type": "stripe",
+        "RA_lower": 75.8,
+        "RA_upper": 84.5,
+        "Dec_lower": -71.08,
+        "Dec_upper": -68.08,
+        "t_frac": 0.2
+      },
+      {
+        "name": "SMC_center",
+        "type": "stripe",
+        "RA_lower": 8.65,
+        "RA_upper": 17.45,
+        "Dec_lower": -74.33,
+        "Dec_upper": -71.33,
+        "t_frac": 0.2
+      }
+    ]
+  }
+}
+
+{
+  "_id": {
+    "$oid": "691e7f8ff58fc1902bcb25ec"
+  },
+  "filename": "S07_LTSYear1_20251120.json",
+  "timestamp": "2025-11-20T02:40:15.969642+00:00",
+  "data": {
+    "survey": "S07",
+    "scienceJustification": "Group Finding",
+    "author": "Aaron Robotham",
+    "year1Areas": [
+      {
+        "name": "Euclid WAVES 1",
+        "type": "stripe",
+        "RA_lower": 353,
+        "RA_upper": 360,
+        "Dec_lower": -35.6,
+        "Dec_upper": -27,
+        "t_frac": 0.9
+      },
+      {
+        "name": "Euclid WAVES 2",
+        "type": "stripe",
+        "RA_lower": 0,
+        "RA_upper": 1,
+        "Dec_lower": -35.6,
+        "Dec_upper": -27,
+        "t_frac": 0.9
+      },
+      {
+        "name": "G15",
+        "type": "stripe",
+        "RA_lower": 211.5,
+        "RA_upper": 223.5,
+        "Dec_lower": -2,
+        "Dec_upper": 3,
+        "t_frac": 0.9
+      },
+      {
+        "name": "WD10",
+        "type": "point",
+        "RA_center": 150.125,
+        "Dec_center": 2.2,
+        "t_frac": 0.2
+      }
+    ]
+  }
+}

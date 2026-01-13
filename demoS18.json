@@ -1,0 +1,17 @@
+{
+    "survey": "S18",
+    "scienceJustification": "Priority areas for FP calibration and first group/environment science",
+    "author": "Edward (ned) Taylor <entaylor@swin.edu.au>",
+    "year1Areas": [
+        
+        {
+            "name": "SPT-deep",
+            "type": "stripe",
+            "RA_lower": 345,
+            "RA_upper": 360,
+            "Dec_lower": -60.0,
+            "Dec_upper": -50.0,
+            "t_frac": 1.0
+        }
+    ]
+}

@@ -1,0 +1,41 @@
+{
+    "survey": "S07",
+    "scienceJustification": "Deep GAMA Science",
+    "author": "Aaron Robotham. Edited by Chris on 20250528 to fixed wrapping of RA in Euclid_a and Euclid_b",
+    "year1Areas": [
+        {
+            "name": "Euclid_a",
+            "type": "stripe",
+            "RA_lower": 353.0,
+            "RA_upper":359.99,
+            "Dec_lower":-35.6,
+            "Dec_upper":-27.0,
+            "t_frac": 0.9
+        },
+        {
+            "name": "Euclid_b",
+            "type": "stripe",
+            "RA_lower": 0.0,
+            "RA_upper": 2.5,
+            "Dec_lower": -35.6,
+            "Dec_upper": -27.0,
+            "t_frac": 0.9
+        },
+        {
+            "name": "G15",
+            "type": "stripe",
+            "RA_lower": 211.5,
+            "RA_upper": 223.5,
+            "Dec_lower": -2.0,
+            "Dec_upper": 3.0,
+            "t_frac": 0.9
+        },
+        {
+            "name": "WD10",
+            "type": "point",
+            "RA_center": 150.125,
+            "Dec_center": 2.2,
+            "t_frac": 0.9
+        }
+    ]
+}

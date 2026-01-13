@@ -1,4 +1,5 @@
 import streamlit as st
+import matplotlib
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.express.colors import sample_colorscale
@@ -49,20 +50,65 @@ def rect_corners(xmin, xmax, ymin, ymax, closed=False):
         return np.vstack([corners, corners[0]])
     return corners
 
+# --- Added: helpers to map t_frac in [0,1] to colors (red -> blue) ---
+def _tfrac_to_rgb(t):
+    """
+    Map t_frac in [0,1] to an RGB tuple using matplotlib's 'Spectral' colormap.
+    Returns (r,g,b) as 0-255 ints.
+    """
+    import matplotlib.cm as _cm
+    t = float(np.clip(t, 0.0, 1.0))
+    cmap = matplotlib.colormaps['Spectral']
+    rgba = cmap(t)  # (r,g,b,a) floats in 0..1
+    rgb = tuple(int(round(255 * v)) for v in rgba[:3])
+    return rgb
 
+def _rgb_to_hex(rgb):
+    return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+def _rgba_str(rgb, alpha=0.25):
+    return f'rgba({rgb[0]},{rgb[1]},{rgb[2]},{alpha})'
+
+# --- Modified: plotPolygons now selects target figure based on data['year'] ---
 def plotPolygons(data, survey_id, allColours=True):
-    if allColours==True:
-        numColours = np.linspace(0, 1, len(data["year1Areas"])+1)
-        colours = iter(sample_colorscale('Tealgrn', list(numColours)))
-    else:
-        numColours = np.linspace(0, 1, len(data["year1Areas"])+1)
-        colours = iter(sample_colorscale('Turbo', list(numColours)))
+
+
     for i in data["year1Areas"]:
+        # determine target figure from top-level 'year' in data
+        #print('Data being plotted:', i)
+        try:
+            year_val = int(i['year'])
+            #print("Detected year:", year_val)
+        except Exception:
+            #print("Error detecting year.")
+            year_val = None
+
+        # default routing: year==2 -> fig2, otherwise -> fig1
+        try:
+            if year_val == 5:
+                target_fig = fig5
+            elif year_val == 4:
+                target_fig = fig4
+            elif year_val == 3:
+                target_fig = fig3
+            elif year_val == 2:
+                target_fig = fig2
+            else:
+                target_fig = fig1
+        except NameError:
+            # if figs are not yet created, fallback to original fig
+            print("Figure objects not found; defaulting to 'fig'.")
+            target_fig = globals().get('fig', None)
+
+        # compute color from t_frac (default to 0 if missing)
+        tfrac = i.get('t_frac', 0.0)
+        rgb = _tfrac_to_rgb(tfrac)
+        hexcol = _rgb_to_hex(rgb)
+        fillcol = _rgba_str(rgb, alpha=0.22)
 
         if i['type']=='stripe':
             RA_lower = i['RA_lower']; RA_upper = i['RA_upper']
             Dec_lower = i['Dec_lower']; Dec_upper = i['Dec_upper']
-            tfrac = i['t_frac']
             # compute RA span, handle wrap-around across 360->0
             if RA_upper >= RA_lower:
                 ra_span = RA_upper - RA_lower
@@ -77,15 +123,16 @@ def plotPolygons(data, survey_id, allColours=True):
                     f"Dec span={dec_span:.2f}. Minimum is {min_span}.\n This will not be plotted and is not a valid LTS input."
                 )
                 continue
-            # build rectangle corners and plot
+            # build rectangle corners and plot on chosen figure
             corners = rect_corners(RA_lower, RA_upper, Dec_lower, Dec_upper, closed=True)
-            fig.add_trace(go.Scatter(
+            target_fig.add_trace(go.Scatter(
                 x=corners[:, 0],
                 y=corners[:, 1],
                 showlegend=False,
                 mode="lines",
                 fill="toself",
-                line=dict(color=next(colours), width=2),
+                line=dict(color=hexcol, width=2),
+                fillcolor=fillcol,
                 name=f"{survey_id}<br> t_frac: {tfrac}"
             )
                         )
@@ -95,55 +142,101 @@ def plotPolygons(data, survey_id, allColours=True):
             radius = 1.15
             tfrac = i['t_frac']
             tissot = plotEllipseTissot(ra_center, dec_center, radius = radius)
-            fig.add_trace(go.Scatter(
-            x=tissot[:, 0],
-            y=tissot[:, 1],
-            showlegend=False,
-            mode="lines",
-            fill="toself",
-            line=dict(color=next(colours), width=2),
-            name=f"{survey_id}<br> t_frac: {tfrac}"
-        )
-                    )
+            target_fig.add_trace(go.Scatter(
+                x=tissot[:, 0],
+                y=tissot[:, 1],
+                showlegend=False,
+                mode="lines",
+                fill="toself",
+                line=dict(color=hexcol, width=2),
+                fillcolor=fillcol,
+                name=f"{survey_id}<br> t_frac: {tfrac}"
+            )
+                        )
+
+        elif i['type']=='polygon' or i['type']=='box':
+            RA = i['RA']
+            Dec = i['Dec']
+            tfrac = i['t_frac']
+            convex_hull = np.array(
+                shapely.geometry.MultiPoint(
+                    [xy for xy in zip(RA, Dec)]
+                ).convex_hull.exterior.coords
+            )
+            target_fig.add_trace(go.Scatter(
+                x=convex_hull[:, 0],
+                y=convex_hull[:, 1],
+                showlegend=False,
+                mode="lines",
+                fill="toself",
+                line=dict(color=hexcol, width=2),
+                fillcolor=fillcol,
+                name="t_frac: "+str(tfrac)
+            )
+                        )
         
-            
         else:
-            print("Please enter a valid shape: 'stripe', 'point'")
+            print("Please enter a valid shape: 'stripe', 'point', or 'polygon' (or 'box').")
             continue
 
 
 def computeTimePressures(data):
+    """
+    Build a weight map (same shape as grid_map_nan) from the provided submission data.
+    Returns zeros map if data missing or malformed.
+    """
+    # guard against missing data
+    if not data or 'year1Areas' not in data or not isinstance(data['year1Areas'], list):
+        return np.zeros_like(grid_map_nan)
+
+    from matplotlib.path import Path
+
     truthGrids = []
     for i in data["year1Areas"]:
+        try:
+            if i.get('type') == 'stripe':
+                RA_lower = i['RA_lower']; RA_upper = i['RA_upper']
+                Dec_lower = i['Dec_lower']; Dec_upper = i['Dec_upper']
+                tfrac = float(i.get('t_frac', 0.0))
+                convex_hull = rect_corners(RA_lower, RA_upper, Dec_lower, Dec_upper, closed=True)
 
-        if i['type']=='stripe':
-            RA_lower = i['RA_lower']; RA_upper = i['RA_upper']
-            Dec_lower = i['Dec_lower']; Dec_upper = i['Dec_upper']
-            tfrac = i['t_frac']
-            convex_hull = np.array(
-                shapely.geometry.MultiPoint(
-                    rect_corners(RA_lower, RA_upper, Dec_lower, Dec_upper, closed=True)
-                ).convex_hull.exterior.coords
-                )
+            elif i.get('type') == 'point':
+                ra_center = i['RA_center']
+                dec_center = i['Dec_center']
+                radius = 1.15
+                tfrac = float(i.get('t_frac', 0.0))
+                tissot = plotEllipseTissot(ra_center, dec_center, radius=radius)
+                convex_hull = tissot
 
-        elif i['type']=='point':
-            ra_center = i['RA_center']
-            dec_center = i['Dec_center']
-            radius = 1.15
-            tfrac = i['t_frac']
-            tissot = plotEllipseTissot(ra_center, dec_center, radius = radius)
-            convex_hull = np.array(
-                shapely.geometry.MultiPoint(
-                    tissot
-                ).convex_hull.exterior.coords
+            elif i.get('type') == 'polygon' or i.get('type') == 'box':
+                RA = i['RA']
+                Dec = i['Dec']
+                tfrac = float(i.get('t_frac', 0.0))
+                convex_hull = np.array(
+                    shapely.geometry.MultiPoint(
+                        [xy for xy in zip(RA, Dec)]
+                    ).convex_hull.exterior.coords
                 )
-        poly = Polygon(convex_hull)
-        allPoints = np.vstack(list(map(np.ravel, mesh))).T
-        sPoints = shapely.points(allPoints)
-        inShape = poly.contains(sPoints)
-        weightMapFlat = inShape * tfrac
-        weightMap = np.reshape(weightMapFlat, grid_map_nan.shape)
-        truthGrids.append(weightMap)
+            else:
+                # skip unknown types
+                continue
+
+            # flatten mesh -> Nx2 array of (lon, lat)
+            allPoints = np.vstack(list(map(np.ravel, mesh))).T  # shape (N,2)
+
+            # Use matplotlib Path for point-in-polygon testing (robust & fast)
+            path = Path(convex_hull)
+            inShape = path.contains_points(allPoints)
+            weightMapFlat = inShape.astype(float) * tfrac
+            weightMap = np.reshape(weightMapFlat, grid_map_nan.shape)
+            truthGrids.append(weightMap)
+        except Exception:
+            # on any area-specific error skip that area
+            continue
+
+    if not truthGrids:
+        return np.zeros_like(grid_map_nan)
+
     truthGrid = np.maximum.reduce(truthGrids)
     return truthGrid
 
@@ -177,7 +270,7 @@ def moving_average_1d_wrap(arr, width):
 
 
 f = open('demoArea.json')
-io = f.read()
+demo_io = f.read()
 
 xsize = 420
 ysize = xsize/2
@@ -192,7 +285,7 @@ zmax = np.nanmax(grid_map_nan)
 
 
 
-dataDefault = json.loads(str(io))
+dataDefault = json.loads(str(demo_io))
 
 
 
@@ -261,11 +354,11 @@ st.set_page_config(layout="wide")
 try:
     mongo_uri = st.secrets.get("MONGO_URI")
     mongo_db = st.secrets.get("MONGO_DB", "lts")
-    mongo_coll = st.secrets.get("MONGO_COLLECTION", "year1submissions")
+    mongo_coll = st.secrets.get("MONGO_COLLECTION", "year1all")
 except Exception:
     mongo_uri = None
     mongo_db = "lts"
-    mongo_coll = "year1submissions"
+    mongo_coll = "year1all"
 
 latest_submissions = {}
 if mongo_uri:
@@ -278,6 +371,20 @@ except Exception:
     print("Error converting latest submissions to JSON")
     latest_submissions_json = "{}"
 
+# --- Added: prefer latest submission for survey S00 if present (non-empty), else use demo_data ---
+# dataDefault is the fallback used when the editor content fails to parse
+try:
+    s00_entry = latest_submissions.get("S00") if latest_submissions else None
+except Exception:
+    s00_entry = None
+
+if s00_entry and s00_entry.get("data"):
+    #print('using latest S00 submission as default')
+    dataDefault = json.dumps(s00_entry["data"], indent=4, default=str)
+    #print('Default Data S00', dataDefault)
+else:
+    dataDefault = json.loads(str(demo_io))
+
 #print(latest_submissions)
 # show a compact summary in the sidebar
 # if latest_submissions:
@@ -288,36 +395,36 @@ except Exception:
 #     except Exception:
 #         pass
 
-st.title("4MOST Year 1 Long Term Scheduler V2")
+st.title("PSOC LTS Tool")
 
-st.write("""This web tool allows 4MOST surveys to define their Year 1 sky observation preferences as part of the Long-Term Scheduler development efforts.
-""")
+# st.write("""This web tool allows 4MOST surveys to define their Year 1 sky observation preferences as part of the Long-Term Scheduler development efforts.
+# """)
 
-st.divider()
-st.header("Step 1: Define Areas here")
+# st.divider()
+# st.header("Step 1: Define Areas here")
 
-st.write("""
-Only stripes and single pointings are accepted into the 4MOST Year 1 Long Term Scheduler V2.
+# st.write("""
+# Only stripes and single pointings are accepted into the 4MOST Year 1 Long Term Scheduler V2.
          
-Edit the JSON contents below, or paste in your own code. 
+# Edit the JSON contents below, or paste in your own code. 
          
-Click the :grey-background[:orange[Run \u25BA]] button. when ready to view submission.
-Both the Sky Plot and R.A. Pressure will update accordingly.
-""")
+# Click the :grey-background[:orange[Run \u25BA]] button. when ready to view submission.
+# Both the Sky Plot and R.A. Pressure will update accordingly.
+# """)
 
-st.markdown("""
-Edit the value for the `survey` key with your surveys ID. e.g. S01, S02, etc. Expected format: string.
+# st.markdown("""
+# Edit the value for the `survey` key with your surveys ID. e.g. S01, S02, etc. Expected format: string.
 
-**Important:** Enter your science justification for this request in the `scienceJustification` part. In the event of oversubscription in an R.A. range, the science justification is a useful negotiation tool.
- Do not use the \'\"\' character as this will break you out of the string.
+# **Important:** Enter your science justification for this request in the `scienceJustification` part. In the event of oversubscription in an R.A. range, the science justification is a useful negotiation tool.
+#  Do not use the \'\"\' character as this will break you out of the string.
 
-Only acceptable inputs for polygons are: 'stripe' and 'point'. Examples are shown at the end of the page.
+# Only acceptable inputs for polygons are: 'stripe' and 'point'. Examples are shown at the end of the page.
 
-#### t_frac
-The `t_frac` key is common to all polygons. It is where you define what fraction of the total 5-year observing time you would like to use in Year 1. It should take a value between 0-1.
+# #### t_frac
+# The `t_frac` key is common to all polygons. It is where you define what fraction of the total 5-year observing time you would like to use in Year 1. It should take a value between 0-1.
             
-Example Polygons are shown at the bottom of the page.  
-""")
+# Example Polygons are shown at the bottom of the page.  
+# """)
 
 #{"name": "Copy", "hasText":True, "alwaysOn": True,"style": {"top": "0.46rem", "right": "0.4rem", "commands": ["copyAll"]}}
 custom_btns = [{"name": "Run",
@@ -329,17 +436,30 @@ custom_btns = [{"name": "Run",
 "commands": ["submit"],
 "style": {"bottom": "0.44rem", "right": "0.4rem"}
 }]
-response_dict = code_editor(str(io), lang="json", buttons=custom_btns, height=[10, 20])
-
+#print('Default Data before response', dataDefault)
+response_dict = code_editor(str(dataDefault), lang="json", buttons=custom_btns, height=[10, 20])
+#print('Response Dict text', response_dict['text'])
+# Robust JSON parsing: show parse error to user and fall back to dataDefault
 try:
-    data = json.loads(str(response_dict['text']))
-
-
-except:
+    raw_text = str(response_dict['text'])
+    if not raw_text.strip():
+        data = json.loads(str(dataDefault))
+    else:
+        data = json.loads(raw_text)
+    #print('Parsed Data', data)
+except Exception as e:
+    st.error(f"Error parsing editor JSON: {e}")
+    st.info("Using fallback submission data (demo or latest S00) until JSON is valid.")
     data = dataDefault
 
-truthGridCurrent = computeTimePressures(data)
-#print(truthGridCurrent)
+# compute time pressures for the currently parsed data so plots update immediately
+try:
+    truthGridCurrent = computeTimePressures(data)
+except Exception as e:
+    # avoid breaking the app if compute fails; show a message and use zeros
+    st.error(f"Error computing time pressures: {e}")
+    truthGridCurrent = np.zeros_like(grid_map_nan)
+
 # numColours = np.linspace(0, 1, len(data["year1Areas"])+1)
 # colours = iter(sample_colorscale('Tealgrn', list(numColours)))
 
@@ -386,12 +506,23 @@ fig = go.Figure(go.Heatmap(
     name=""
     ), layout=layout)
 
+# create fig1..fig5 immediately so plotPolygons can route to them
+old_title = fig.layout.title.text if (hasattr(fig.layout, "title") and fig.layout.title and getattr(fig.layout.title, "text", None)) else "Year 1 Long Term Scheduler Preference"
+figs = []
+for idx in range(1, 6):
+    newf = go.Figure(fig)  # copy figure (data + layout)
+    newf.update_layout(title=f"Year {idx}",yaxis_range=[-90,30])
+    newf['layout']['xaxis']['autorange'] = "reversed"
+    figs.append(newf)
+fig1, fig2, fig3, fig4, fig5 = figs
+
 if latest_submissions:
     for i in latest_submissions.keys():
         dataLatest = latest_submissions[i]['data']
         plotPolygons(dataLatest, dataLatest.get('survey', i), allColours=False)
 else:
     st.info("No previous submissions found in the remote DB — only the current edited data will be plotted.")
+#print('Data', data)
 
 plotPolygons(data, data['survey'], allColours=True)
 
@@ -432,38 +563,41 @@ The goal is to avoid oversubscription in Year 1 any R.A. range, which is indicat
 We do not want to spend more than 50% of the available time in any R.A. range.
 R.A. pressure is smoothed over a rolling 30 degrees width.
 """)
-st.plotly_chart(fig, use_container_width=True)
+
+# display the five pre-created figures vertically
+for f in (fig1, fig2, fig3, fig4, fig5):
+    st.plotly_chart(f, use_container_width=True)
 
 # New: 1D line plot under the map that shares the longitude x-axis scale
 #import plotly.graph_objects as go as _go  # avoid name clash in context; use existing go normally
-if plotSmooth:
-    fig_times = go.Figure()
-    fig_times.add_trace(go.Scatter(
-        x=longitude,
-        y=coarseTime,
-        mode="lines",
-        name="Coarse Bins",
-        line=dict(color="#b1b1b1", width=2, dash='dash')
-    ))
-    fig_times.add_trace(go.Scatter(
-        x=longitude,
-        y=smoothTime,
-        mode="lines",
-        name="30° Smooth",
-        line=dict(color="#96cefd", width=5)
-    ))
-    fig_times.add_hline(y=0.5, line_width=2, line_dash="dash", line_color="#72e06a", annotation_text="50% Time Pressure", annotation_position="bottom left")
-    fig_times.add_hline(y=0.8, line_width=2, line_dash="dash", line_color="#d31510", annotation_text="80% Time Pressure", annotation_position="bottom left")
-    fig_times.update_layout(
-        autosize=False,
-        width=800,
-        height=260,
-        title="R.A. Time Pressure Plot",
-        xaxis=dict(title="R.A.", range=[360, 0]),  # reversed to match sky map RA direction
-        yaxis=dict(title="Fraction of 1-year time", range=[0, 1]),
-        margin=dict(l=40, r=20, t=50, b=40),
-    )
-    st.plotly_chart(fig_times, use_container_width=True)
+# if plotSmooth:
+#     fig_times = go.Figure()
+#     fig_times.add_trace(go.Scatter(
+#         x=longitude,
+#         y=coarseTime,
+#         mode="lines",
+#         name="Coarse Bins",
+#         line=dict(color="#b1b1b1", width=2, dash='dash')
+#     ))
+#     fig_times.add_trace(go.Scatter(
+#         x=longitude,
+#         y=smoothTime,
+#         mode="lines",
+#         name="30° Smooth",
+#         line=dict(color="#96cefd", width=5)
+#     ))
+#     fig_times.add_hline(y=0.5, line_width=2, line_dash="dash", line_color="#72e06a", annotation_text="50% Time Pressure", annotation_position="bottom left")
+#     fig_times.add_hline(y=0.8, line_width=2, line_dash="dash", line_color="#d31510", annotation_text="80% Time Pressure", annotation_position="bottom left")
+#     fig_times.update_layout(
+#         autosize=False,
+#         width=800,
+#         height=260,
+#         title="R.A. Time Pressure Plot",
+#         xaxis=dict(title="R.A.", range=[360, 0]),  # reversed to match sky map RA direction
+#         yaxis=dict(title="Fraction of 1-year time", range=[0, 1]),
+#         margin=dict(l=40, r=20, t=50, b=40),
+#     )
+#     st.plotly_chart(fig_times, use_container_width=True)
 
 st.divider()
 st.header("Step 3: Save to cloud")
