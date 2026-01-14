@@ -69,7 +69,7 @@ def _rgb_to_hex(rgb):
 def _rgba_str(rgb, alpha=0.25):
     return f'rgba({rgb[0]},{rgb[1]},{rgb[2]},{alpha})'
 
-# --- Modified: plotPolygons now selects target figure based on data['year'] ---
+# --- Modified: plotPolygons now draws a thin white outline under each trace ---
 def plotPolygons(data, survey_id, allColours=True):
 
 
@@ -106,6 +106,11 @@ def plotPolygons(data, survey_id, allColours=True):
         hexcol = _rgb_to_hex(rgb)
         fillcol = _rgba_str(rgb, alpha=0.22)
 
+        # outline settings (white thin line under the colored line)
+        outline_color = "#ffffff"
+        outline_width = 3  # slightly larger than inner line so white shows as an outline
+        inner_width = 2
+
         if i['type']=='stripe':
             RA_lower = i['RA_lower']; RA_upper = i['RA_upper']
             Dec_lower = i['Dec_lower']; Dec_upper = i['Dec_upper']
@@ -125,13 +130,25 @@ def plotPolygons(data, survey_id, allColours=True):
                 continue
             # build rectangle corners and plot on chosen figure
             corners = rect_corners(RA_lower, RA_upper, Dec_lower, Dec_upper, closed=True)
+
+            # white outline trace (no fill)
+            target_fig.add_trace(go.Scatter(
+                x=corners[:, 0],
+                y=corners[:, 1],
+                showlegend=False,
+                mode="lines",
+                line=dict(color=outline_color, width=outline_width),
+                hoverinfo='skip',
+            ))
+
+            # colored filled trace on top
             target_fig.add_trace(go.Scatter(
                 x=corners[:, 0],
                 y=corners[:, 1],
                 showlegend=False,
                 mode="lines",
                 fill="toself",
-                line=dict(color=hexcol, width=2),
+                line=dict(color=hexcol, width=inner_width),
                 fillcolor=fillcol,
                 name=f"{survey_id}<br> t_frac: {tfrac}"
             )
@@ -142,13 +159,25 @@ def plotPolygons(data, survey_id, allColours=True):
             radius = 1.15
             tfrac = i['t_frac']
             tissot = plotEllipseTissot(ra_center, dec_center, radius = radius)
+
+            # white outline trace (no fill)
+            target_fig.add_trace(go.Scatter(
+                x=tissot[:, 0],
+                y=tissot[:, 1],
+                showlegend=False,
+                mode="lines",
+                line=dict(color=outline_color, width=outline_width),
+                hoverinfo='skip',
+            ))
+
+            # colored filled trace on top
             target_fig.add_trace(go.Scatter(
                 x=tissot[:, 0],
                 y=tissot[:, 1],
                 showlegend=False,
                 mode="lines",
                 fill="toself",
-                line=dict(color=hexcol, width=2),
+                line=dict(color=hexcol, width=inner_width),
                 fillcolor=fillcol,
                 name=f"{survey_id}<br> t_frac: {tfrac}"
             )
@@ -163,13 +192,25 @@ def plotPolygons(data, survey_id, allColours=True):
                     [xy for xy in zip(RA, Dec)]
                 ).convex_hull.exterior.coords
             )
+
+            # white outline trace (no fill)
+            target_fig.add_trace(go.Scatter(
+                x=convex_hull[:, 0],
+                y=convex_hull[:, 1],
+                showlegend=False,
+                mode="lines",
+                line=dict(color=outline_color, width=outline_width),
+                hoverinfo='skip',
+            ))
+
+            # colored filled trace on top
             target_fig.add_trace(go.Scatter(
                 x=convex_hull[:, 0],
                 y=convex_hull[:, 1],
                 showlegend=False,
                 mode="lines",
                 fill="toself",
-                line=dict(color=hexcol, width=2),
+                line=dict(color=hexcol, width=inner_width),
                 fillcolor=fillcol,
                 name="t_frac: "+str(tfrac)
             )
@@ -502,7 +543,7 @@ fig = go.Figure(go.Heatmap(
     "<b>Total t_exp (min)</b>: %{text:.1f}",
     zmin = np.log10(zmin), zmax = np.log10(zmax),
     colorbar = colorbar(zmin, zmax, 12),
-    colorscale = 'Plasma',
+    colorscale = 'Viridis',
     name=""
     ), layout=layout)
 
@@ -728,7 +769,7 @@ if pw and expected_pw and pw != expected_pw:
 if st.button("Save to remote DB", key="save_remote_db", disabled=save_disabled):
     ok, msg = save_to_remote_db(json_string, fileOutputName)
     if ok:
-        st.success(msg)
+        st.success('You must refresh the page before making more edits.\n' + msg)
     else:
         st.error(msg)
 
@@ -812,7 +853,8 @@ c1.json(      {
         "RA_upper": 52.5,
         "Dec_lower":-35.0,
         "Dec_upper":-25.0,
-        "t_frac": 0.2
+        "t_frac": 0.2,
+        "year": 1
       })
 c2.header('Single 4MOST Pointing')
 c2.json({
@@ -820,5 +862,16 @@ c2.json({
     "type": "point",
     "RA_center":150.125,
     "Dec_center":2.2,
-    "t_frac": 0.9
+    "t_frac": 0.9,
+    "year": 2
+})
+
+c3.header("Polygon")
+c3.json(      {
+        "name": "examplePolygon",
+        "type": "box",
+        "RA": [0.0 ,52.5, 52.5, 0.0],
+        "Dec":[-35.0 ,-35.0,-25.0,-25.0],
+        "t_frac": 0.2,
+        "year": 3
       })
