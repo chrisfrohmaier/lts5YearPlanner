@@ -606,6 +606,50 @@ R.A. pressure is smoothed over a rolling 30 degrees width.
 """)
 
 # display the five pre-created figures vertically
+# --- Added: horizontal Spectral colorbar displayed above the stacked figures ---
+# build a Plotly colorscale sampled from matplotlib Spectral
+ncolors = 256
+cmap = matplotlib.colormaps['Spectral']
+colors = [_rgb_to_hex(tuple(int(round(255 * v)) for v in cmap(i / (ncolors - 1))[:3])) for i in range(ncolors)]
+colorscale = [[i / (ncolors - 1), colors[i]] for i in range(ncolors)]
+
+# --- Replace the previous colorbar_fig with a thinner colorbar that shows inner ticks 0..1 in 0.1 increments ---
+z = np.linspace(0.0, 1.0, ncolors).reshape(1, -1)
+# build tick positions and labels 0.0, 0.1, ... 1.0
+tick_vals = [round(i * 0.1, 1) for i in range(11)]
+tick_text = [f"{v:.1f}" for v in tick_vals]
+
+colorbar_fig = go.Figure(go.Heatmap(
+    z=z,
+    colorscale=colorscale,
+    showscale=True,
+    colorbar=dict(
+        orientation='h',
+        thickness=6,              # thinner bar body
+        len=1,                   # fill the full x width
+        x=0.5,
+        xanchor='center',
+        title=dict(text='Fraction of time', font=dict(size=11)),
+        titleside='top',
+        tickmode='array',
+        tickvals=tick_vals,      # inner ticks at 0.0..1.0 (0.1 steps)
+        ticktext=tick_text,
+        ticks='inside',          # draw ticks inside the bar
+        tickfont=dict(size=10)
+    )
+))
+
+# compact figure but allow top margin so title/ticks aren't clipped
+colorbar_fig.update_layout(
+    height=60,
+    margin=dict(l=8, r=8, t=28, b=6),
+    xaxis=dict(visible=False, range=[-0.5, ncolors - 0.5]),
+    yaxis=dict(visible=False),
+)
+
+st.plotly_chart(colorbar_fig, use_container_width=True)
+
+# display the five pre-created figures vertically
 for f in (fig1, fig2, fig3, fig4, fig5):
     st.plotly_chart(f, use_container_width=True)
 
