@@ -911,7 +911,7 @@ c2.json({
 c3.header("Polygon")
 c3.json(      {
         "name": "examplePolygon",
-        "type": "box",
+        "type": "polygon",
         "RA": [0.0 ,52.5, 52.5, 0.0],
         "Dec":[-35.0 ,-35.0,-25.0,-25.0],
         "t_frac": 0.2,
