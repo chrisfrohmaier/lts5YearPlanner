@@ -628,9 +628,7 @@ colorbar_fig = go.Figure(go.Heatmap(
         thickness=6,              # thinner bar body
         len=1,                   # fill the full x width
         x=0.5,
-        xanchor='center',
-        title=dict(text='Fraction of time', font=dict(size=11)),
-        titleside='top',
+        xanchor='center',  
         tickmode='array',
         tickvals=tick_vals,      # inner ticks at 0.0..1.0 (0.1 steps)
         ticktext=tick_text,
